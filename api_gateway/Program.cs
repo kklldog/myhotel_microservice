@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using api_gateway.aggregators;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace api_gateway
 {
@@ -28,7 +30,8 @@ namespace api_gateway
                       .AddEnvironmentVariables();
               })
               .ConfigureServices(s => {
-                  s.AddOcelot();
+                  s.AddOcelot()
+                  .AddTransientDefinedAggregator<HotelDetailInfoForMobileAggregator>();
               })
               .ConfigureLogging((hostingContext, logging) =>
               {

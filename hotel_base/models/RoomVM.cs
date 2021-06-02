@@ -12,5 +12,7 @@ namespace hotel_base.models
         public string No { get; set; }
 
         public int Floor { get; set; }
+
+        public string HotelId { get; set; }
     }
 }
