@@ -9,6 +9,6 @@
     <PackageReference Include="Ocelot" Version="17.0.0" />
   </ItemGroup>
 
-  <ProjectExtensions><VisualStudio><UserProperties routes_1json__JsonSchema="https://json.schemastore.org/appsettings.json" /></VisualStudio></ProjectExtensions>
+  <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 
 </Project>

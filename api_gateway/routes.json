@@ -33,7 +33,9 @@
           "Port": 6003
         }
       ],
-      "Key": "hotel_base_info"
+      "Key": "hotel_base_info",
+      //缓存5s
+      "FileCacheOptions": { "TtlSeconds": 5 }
     },
     {
       //获取酒店房间列表
