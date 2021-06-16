@@ -20,6 +20,10 @@ namespace hotel_base
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    webBuilder.ConfigureKestrel(options =>
+                    {
+                        options.ListenAnyIP(6003);
+                    });
                     webBuilder.UseStartup<Startup>();
                 });
     }

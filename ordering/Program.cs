@@ -20,6 +20,10 @@ namespace ordering
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    webBuilder.ConfigureKestrel(options =>
+                    {
+                        options.ListenAnyIP(6001);
+                    });
                     webBuilder.UseStartup<Startup>();
                 });
     }
