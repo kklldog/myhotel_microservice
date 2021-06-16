@@ -1,14 +1,11 @@
+using common.libs;
+using Consul;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace hotel_base
 {
@@ -24,6 +21,10 @@ namespace hotel_base
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<IConsulClient>(new ConsulClient( x=> {
+                x.Address = new Uri(Configuration["consul:clientAddress"]);
+            }));
+            services.AddHostedService<ConsulRegister>();
 
             services.AddControllers();
         }
