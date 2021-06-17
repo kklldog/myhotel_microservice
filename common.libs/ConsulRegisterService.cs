@@ -20,12 +20,12 @@ namespace common.libs
         public string HealthCheckAddress { get; set; }
     }
 
-    public class ConsulRegister : IHostedService
+    public class ConsulRegisterService : IHostedService
     {
         IConsulClient _consulClient;
         string _serviceID = "";
         ServiceInfo _serviceInfo;
-        public ConsulRegister(IConfiguration config, IConsulClient consulClient)
+        public ConsulRegisterService(IConfiguration config, IConsulClient consulClient)
         {
             _serviceInfo = new ServiceInfo();
             var sc = config.GetSection("serviceInfo");
@@ -41,6 +41,7 @@ namespace common.libs
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             Console.WriteLine("start to register service info to consul client ...");
+            await _consulClient.Agent.ServiceDeregister(_serviceID, cancellationToken);
             await _consulClient.Agent.ServiceRegister(new AgentServiceRegistration
             {
                 ID = _serviceID,
@@ -49,7 +50,7 @@ namespace common.libs
                 Port = _serviceInfo.Port, // 服务绑定端口
                 Check = new AgentServiceCheck()
                 {
-                    DeregisterCriticalServiceAfter = TimeSpan.FromSeconds(1),//服务启动多久后注册
+                    DeregisterCriticalServiceAfter = TimeSpan.FromSeconds(0),//服务启动多久后注册
                     Interval = TimeSpan.FromSeconds(5),//健康检查时间间隔
                     HTTP = $"http://{_serviceInfo.IP}:{_serviceInfo.Port}/" + _serviceInfo.HealthCheckAddress,//健康检查地址
                     Timeout = TimeSpan.FromSeconds(5)
@@ -60,7 +61,7 @@ namespace common.libs
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            await _consulClient.Agent.ServiceDeregister(_serviceID);
+            await _consulClient.Agent.ServiceDeregister(_serviceID, cancellationToken);
             Console.WriteLine("Deregister service info from consul client Successful ...");
         }
     }

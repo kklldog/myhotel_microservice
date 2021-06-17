@@ -29,12 +29,13 @@ namespace member_center
             services.AddSingleton<IConsulClient>(new ConsulClient(x => {
                 x.Address = new Uri(Configuration["consul:clientAddress"]);
             }));
-            services.AddHostedService<ConsulRegister>();
+            services.AddSingleton<IConsulService, ConsulService>();
+            services.AddHostedService<ConsulRegisterService>();
             services.AddControllers();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime lifetime)
         {
             if (env.IsDevelopment())
             {

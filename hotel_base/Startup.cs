@@ -24,7 +24,7 @@ namespace hotel_base
             services.AddSingleton<IConsulClient>(new ConsulClient( x=> {
                 x.Address = new Uri(Configuration["consul:clientAddress"]);
             }));
-            services.AddHostedService<ConsulRegister>();
+            services.AddHostedService<ConsulRegisterService>();
 
             services.AddControllers();
         }

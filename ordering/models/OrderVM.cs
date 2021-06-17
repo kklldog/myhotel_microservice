@@ -17,6 +17,8 @@ namespace ordering.models
 
         public string MemberId { get; set; }
 
+        public MemberVM Member { get; set; }
+
         public string HotelId { get; set; }
 
         public string CreateDay { get; set; }

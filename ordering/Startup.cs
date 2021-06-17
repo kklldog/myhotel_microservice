@@ -26,10 +26,14 @@ namespace ordering
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            //注册Consulclient对象
             services.AddSingleton<IConsulClient>(new ConsulClient(x => {
                 x.Address = new Uri(Configuration["consul:clientAddress"]);
             }));
-            services.AddHostedService<ConsulRegister>();
+            //注册ConsulService里面封装了一些方法
+            services.AddSingleton<IConsulService, ConsulService>();
+            //注册ConsulRegisterService 这个servcie在app启动的时候会自动注册服务信息
+            services.AddHostedService<ConsulRegisterService>();
             services.AddControllers();
         }
 
