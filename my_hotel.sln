@@ -17,7 +17,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "member_center", "member_cen
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "hotel_base", "hotel_base\hotel_base.csproj", "{BB87A844-AA35-4235-B4BE-B6038F4975D8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "common.libs", "common.libs\common.libs.csproj", "{A988337D-3495-4F79-9F63-037951018724}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "common.libs", "common.libs\common.libs.csproj", "{A988337D-3495-4F79-9F63-037951018724}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{ACA99308-1DA7-4AD0-8231-E880336E1375}"
+	ProjectSection(SolutionItems) = preProject
+		docker-compose.yml = docker-compose.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,0 +1,62 @@
+version: '3.9'
+services:
+
+  consulserver1:
+    image: consul:1.9.4
+    restart: always
+    container_name: consulserver1
+    hostname: consulserver1
+    command: agent -server -bootstrap -client=0.0.0.0 -ui -node=consulserver1
+    ports:
+      - 8500:8500
+  consulserver2:
+    image: consul:1.9.4
+    restart: always
+    container_name: consulserver2
+    hostname: consulserver2
+    command: agent -server -join=consulserver1 -node=consulserver2
+    depends_on:
+      - consulserver1
+
+  consulserver3:
+    image: consul:1.9.4
+    restart: always
+    container_name: consulserver3
+    hostname: consulserver3
+    command: agent -server -join=consulserver1 -node=consulserver3
+    depends_on:
+      - consulserver1
+
+  consulclient1:
+    image: consul:1.9.4
+    restart: always
+    container_name: consulclient1
+    hostname: consulclient1
+    command: agent -client=0.0.0.0 -retry-join=consulserver1 -node=consulclient1
+    depends_on:
+      - consulserver2
+      - consulserver3
+    ports:
+      - 8600:8500
+  consulclient2:
+    image: consul:1.9.4
+    restart: always
+    container_name: consulclient2
+    hostname: consulclient2
+    command: agent -client=0.0.0.0 -retry-join=consulserver1 -node=consulclient2
+    depends_on:
+      - consulserver2
+      - consulserver3
+    ports:
+      - 8700:8500
+  consulclient3:
+    image: consul:1.9.4
+    restart: always
+    container_name: consulclient3
+    hostname: consulclient3
+    command: agent -client=0.0.0.0 -retry-join=consulserver1 -node=consulclient3
+    depends_on:
+      - consulserver2
+      - consulserver3
+    ports:
+      - 8800:8500
