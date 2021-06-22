@@ -19,7 +19,7 @@ namespace hotel_base
             var logger = NLog.Web.NLogBuilder.ConfigureNLog("nlog.config").GetCurrentClassLogger();
             try
             {
-                logger.Debug("init main");
+                logger.Debug("app init main");
                 CreateHostBuilder(args).Build().Run();
             }
             catch (Exception exception)
