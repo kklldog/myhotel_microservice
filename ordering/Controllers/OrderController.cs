@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using ordering.data;
+using ordering.entities;
 using ordering.models;
 using System;
 using System.Collections.Generic;
@@ -15,26 +17,6 @@ namespace ordering.Controllers
     [Route("[controller]")]
     public class OrderController : ControllerBase
     {
-        private static readonly List<OrderVM> _orders = new List<OrderVM>() { 
-            new OrderVM { 
-                Id = "OD001",
-                StartDay = "2021-05-01",
-                EndDay = "2021-05-02",
-                RoomNo = "1001",
-                MemberId = "M001",
-                HotelId = "H8001",
-                CreateDay = "2021-05-01"
-            },
-            new OrderVM {
-                Id = "OD002",
-                StartDay = "2021-05-03",
-                EndDay = "2021-05-04",
-                RoomNo = "1002",
-                MemberId = "M002",
-                HotelId = "H8001",
-                CreateDay = "2021-05-03"
-            },
-        };
 
         private readonly ILogger<OrderController> _logger;
         private IConsulService _consulservice;
@@ -45,15 +27,37 @@ namespace ordering.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<OrderVM> Get()
+        public async Task<IEnumerable<OrderVM>> Get()
         {
-            return _orders;
+            var orders = await FreeSQL.Instance.Select<Order>().ToListAsync();
+            var vms = orders.Select(o => new OrderVM
+            {
+                Id = o.Id,
+                StartDay = o.StartDay,
+                EndDay = o.EndDay,
+                RoomNo = o.RoomNo,
+                MemberId = o.MemberId,
+                HotelId = o.HotelId,
+                CreateDay = o.CreateDay
+            });
+
+            return vms;
         }
 
         [HttpGet("{id}")]
         public async Task<OrderVM> Get(string id)
         {
-            var order = _orders.FirstOrDefault(x=>x.Id == id);
+            var order = await FreeSQL.Instance.Select<Order>().Where(x => x.Id == id).FirstAsync();
+            var vm = new OrderVM
+            {
+                Id = order.Id,
+                StartDay = order.StartDay,
+                EndDay = order.EndDay,
+                RoomNo = order.RoomNo,
+                MemberId = order.MemberId,
+                HotelId = order.HotelId,
+                CreateDay = order.CreateDay
+            };
             if (!string.IsNullOrEmpty(order.MemberId))
             {
                 var memberServiceAddresses = await _consulservice.GetServicesAsync("member_center");
@@ -64,17 +68,28 @@ namespace ordering.Controllers
                     var memberResult = await httpClient.GetAsync("/member/" + order.MemberId);
                     var json = await memberResult.Content.ReadAsStringAsync();
                     var member = JsonConvert.DeserializeObject<MemberVM>(json);
-                    order.Member = member;
+                    vm.Member = member;
                 }
             }
 
-            return order;
+            return vm;
         }
 
         [HttpGet("get_orders")]
-        public List<OrderVM> Query(string day)
+        public async Task<IEnumerable<OrderVM>> Query(string day)
         {
-            return _orders.Where(x => x.CreateDay == day).ToList();
+            var orders =  await FreeSQL.Instance.Select<Order>().Where(x=>x.CreateDay == day).ToListAsync();
+
+            return orders.Select(o => new OrderVM
+            {
+                Id = o.Id,
+                StartDay = o.StartDay,
+                EndDay = o.EndDay,
+                RoomNo = o.RoomNo,
+                MemberId = o.MemberId,
+                HotelId = o.HotelId,
+                CreateDay = o.CreateDay
+            });
         }
     }
 }
