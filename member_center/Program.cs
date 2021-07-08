@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using NLog.Web;
+using Winton.Extensions.Configuration.Consul;
 
 namespace member_center
 {
@@ -38,6 +39,20 @@ namespace member_center
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    webBuilder.ConfigureAppConfiguration((ctx,cfg)=> {
+                        var localconfig = new ConfigurationBuilder()
+                                    .SetBasePath(Directory.GetCurrentDirectory())
+                                    .AddJsonFile("appsettings.json").AddEnvironmentVariables().Build();
+                        var consul_server = localconfig["consul_server"];
+
+                        cfg.AddConsul("member_center/config.json",op=> {
+                            op.ConsulConfigurationOptions = cco =>
+                            {
+                                cco.Address = new Uri(consul_server);
+                            };
+                            op.ReloadOnChange = true;
+                        });
+                    });
                     webBuilder.ConfigureKestrel(options =>
                     {
                         options.ListenAnyIP(6002);

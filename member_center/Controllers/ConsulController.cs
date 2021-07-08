@@ -1,5 +1,6 @@
 ﻿using common.libs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -13,9 +14,11 @@ namespace member_center.Controllers
     public class ConsulController : ControllerBase
     {
         IConsulService _consulservice;
-        public ConsulController(IConsulService consulservice)
+        IConfiguration _configuration;
+        public ConsulController(IConsulService consulservice, IConfiguration configuration)
         {
             _consulservice = consulservice;
+            _configuration = configuration;
         }
 
         [HttpGet("getService")]
@@ -24,6 +27,12 @@ namespace member_center.Controllers
             var services = await _consulservice.GetServicesAsync(name);
 
             return services.Select(x => x.Address + ":" + x.Port).ToList();
+        }
+
+        [HttpGet("getConfig")]
+        public string GetConfig(string key)
+        {
+            return _configuration[key];
         }
     }
 }
