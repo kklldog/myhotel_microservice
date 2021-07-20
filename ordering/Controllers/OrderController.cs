@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Polly;
 
 namespace ordering.Controllers
 {
@@ -62,14 +63,19 @@ namespace ordering.Controllers
             {
                 var memberServiceAddresses = await _consulservice.GetServicesAsync("member_center");
                 var memberServiceAddress = memberServiceAddresses.FirstOrDefault();
-                using (var httpClient = new HttpClient())
+                var member = await Policy.Handle<HttpRequestException>().RetryAsync(3).ExecuteAsync(async () =>
                 {
-                    httpClient.BaseAddress = new Uri($"http://{memberServiceAddress.Address}:{memberServiceAddress.Port}");
-                    var memberResult = await httpClient.GetAsync("/member/" + order.MemberId);
-                    var json = await memberResult.Content.ReadAsStringAsync();
-                    var member = JsonConvert.DeserializeObject<MemberVM>(json);
-                    vm.Member = member;
-                }
+                    using (var httpClient = new HttpClient())
+                    {
+                        httpClient.BaseAddress = new Uri($"http://{memberServiceAddress.Address}:{memberServiceAddress.Port}");
+                        var memberResult = await httpClient.GetAsync("/member/" + order.MemberId);
+                        memberResult.EnsureSuccessStatusCode();
+                        var json = await memberResult.Content.ReadAsStringAsync();
+                        var member = JsonConvert.DeserializeObject<MemberVM>(json);
+                        return member;
+                    }
+                });
+                vm.Member = member;
             }
 
             return vm;
