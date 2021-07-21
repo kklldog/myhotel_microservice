@@ -11,6 +11,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Polly;
+using Polly.CircuitBreaker;
 
 namespace ordering.Controllers
 {
@@ -45,7 +46,24 @@ namespace ordering.Controllers
             return vms;
         }
 
-        [HttpGet("{id}")]
+        static AsyncCircuitBreakerPolicy circuitBreaker =  Policy.Handle<HttpRequestException>().CircuitBreakerAsync(
+            exceptionsAllowedBeforeBreaking: 10,
+            durationOfBreak: TimeSpan.FromSeconds(30),
+        onBreak: (ex, ts) =>
+        {
+            Console.WriteLine("circuitBreaker onBreak .");
+        },
+        onReset: () =>
+        {
+            Console.WriteLine("circuitBreaker onReset ");
+        },
+        onHalfOpen: () =>
+        {
+            Console.WriteLine("circuitBreaker onHalfOpen");
+        }
+        );
+
+[HttpGet("{id}")]
         public async Task<OrderVM> Get(string id)
         {
             var order = await FreeSQL.Instance.Select<Order>().Where(x => x.Id == id).FirstAsync();
@@ -63,19 +81,26 @@ namespace ordering.Controllers
             {
                 var memberServiceAddresses = await _consulservice.GetServicesAsync("member_center");
                 var memberServiceAddress = memberServiceAddresses.FirstOrDefault();
-                var member = await Policy.Handle<HttpRequestException>().RetryAsync(3).ExecuteAsync(async () =>
+                var retry = Policy.Handle<HttpRequestException>().RetryAsync(3);
+                var fallback = Policy<string>.Handle<HttpRequestException>().Or<BrokenCircuitException>().FallbackAsync("FALLBACK")
+                    .WrapAsync(circuitBreaker.WrapAsync(retry));
+                var memberJson = await fallback.ExecuteAsync(async () =>
                 {
                     using (var httpClient = new HttpClient())
                     {
-                        httpClient.BaseAddress = new Uri($"http://{memberServiceAddress.Address}:{memberServiceAddress.Port}");
-                        var memberResult = await httpClient.GetAsync("/member/" + order.MemberId);
-                        memberResult.EnsureSuccessStatusCode();
-                        var json = await memberResult.Content.ReadAsStringAsync();
-                        var member = JsonConvert.DeserializeObject<MemberVM>(json);
-                        return member;
+                        httpClient.BaseAddress =
+                            new Uri($"http://{memberServiceAddress.Address}:{memberServiceAddress.Port}");
+                        var result = await httpClient.GetAsync("/member/" + order.MemberId);
+                        result.EnsureSuccessStatusCode();
+                        var json = await result.Content.ReadAsStringAsync();
+                        return json;
                     }
                 });
-                vm.Member = member;
+                if (memberJson != "FALLBACK")
+                {
+                    var member = JsonConvert.DeserializeObject<MemberVM>(memberJson);
+                    vm.Member = member;
+                }
             }
 
             return vm;
@@ -84,7 +109,7 @@ namespace ordering.Controllers
         [HttpGet("get_orders")]
         public async Task<IEnumerable<OrderVM>> Query(string day)
         {
-            var orders =  await FreeSQL.Instance.Select<Order>().Where(x=>x.CreateDay == day).ToListAsync();
+            var orders = await FreeSQL.Instance.Select<Order>().Where(x => x.CreateDay == day).ToListAsync();
 
             return orders.Select(o => new OrderVM
             {
