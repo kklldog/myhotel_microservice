@@ -1,3 +1,4 @@
+using AspectCore.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -42,6 +43,7 @@ namespace ordering
                         options.ListenAnyIP(6001);
                     });
                     webBuilder.UseStartup<Startup>();
-                });
+                })
+                .UseServiceProviderFactory(new DynamicProxyServiceProviderFactory());
     }
 }

@@ -12,6 +12,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Polly;
 using Polly.CircuitBreaker;
+using ordering.services;
 
 namespace ordering.Controllers
 {
@@ -22,10 +23,12 @@ namespace ordering.Controllers
 
         private readonly ILogger<OrderController> _logger;
         private IConsulService _consulservice;
-        public OrderController(ILogger<OrderController> logger, IConsulService consulService)
+        private IMemberService _memberService;
+        public OrderController(ILogger<OrderController> logger, IConsulService consulService, IMemberService memberService)
         {
             _consulservice = consulService;
             _logger = logger;
+            _memberService = memberService;
         }
 
         [HttpGet]
@@ -79,26 +82,9 @@ namespace ordering.Controllers
             };
             if (!string.IsNullOrEmpty(order.MemberId))
             {
-                var memberServiceAddresses = await _consulservice.GetServicesAsync("member_center");
-                var memberServiceAddress = memberServiceAddresses.FirstOrDefault();
-                var retry = Policy.Handle<HttpRequestException>().RetryAsync(3);
-                var fallback = Policy<string>.Handle<HttpRequestException>().Or<BrokenCircuitException>().FallbackAsync("FALLBACK")
-                    .WrapAsync(circuitBreaker.WrapAsync(retry));
-                var memberJson = await fallback.ExecuteAsync(async () =>
+                var member = await _memberService.GetMemberInfo(order.MemberId);
+                if (member != null)
                 {
-                    using (var httpClient = new HttpClient())
-                    {
-                        httpClient.BaseAddress =
-                            new Uri($"http://{memberServiceAddress.Address}:{memberServiceAddress.Port}");
-                        var result = await httpClient.GetAsync("/member/" + order.MemberId);
-                        result.EnsureSuccessStatusCode();
-                        var json = await result.Content.ReadAsStringAsync();
-                        return json;
-                    }
-                });
-                if (memberJson != "FALLBACK")
-                {
-                    var member = JsonConvert.DeserializeObject<MemberVM>(memberJson);
                     vm.Member = member;
                 }
             }

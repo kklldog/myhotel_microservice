@@ -5,6 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AspectCore.Core" Version="2.2.0" />
+    <PackageReference Include="AspectCore.Extensions.DependencyInjection" Version="2.2.0" />
     <PackageReference Include="Elastic.Apm.NetCoreAll" Version="1.10.0" />
     <PackageReference Include="FreeSql" Version="2.5.200" />
     <PackageReference Include="FreeSql.Provider.Sqlite" Version="2.5.200" />
